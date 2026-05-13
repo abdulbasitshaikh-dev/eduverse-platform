@@ -139,3 +139,4 @@ gunicorn*.log
 *.tmp
 *.temp
 *.old
+requirements.txt
