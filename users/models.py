@@ -48,7 +48,8 @@ class User(AbstractUser):
     username = models.CharField(max_length=150)
     email = models.EmailField(unique=True)
 
-    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default=ROLE_STUDENT)
+    role = models.CharField(
+        max_length=10, choices=ROLE_CHOICES, default=ROLE_STUDENT)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username"]
@@ -90,13 +91,6 @@ class VerificationSubmission(models.Model):
             models.Index(fields=["created_at"]),
         ]
         ordering = ["-created_at"]
-        constraints = [
-            models.UniqueConstraint(
-                fields=["profile"],
-                condition=Q(status="pending"),
-                name="unique_pending_verification_per_instructor",
-            )
-        ]
 
     def __str__(self):
         return f"VerificationSubmission({self.profile.user.email}, {self.status})"

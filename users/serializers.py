@@ -55,7 +55,8 @@ class VerificationSubmissionAdminDetailSerializer(serializers.ModelSerializer):
     instructor_username = serializers.CharField(
         source="profile.user.username", read_only=True
     )
-    instructor_bio = serializers.CharField(source="profile.bio", read_only=True)
+    instructor_bio = serializers.CharField(
+        source="profile.bio", read_only=True)
     instructor_expertise = serializers.CharField(
         source="profile.expertise", read_only=True
     )
@@ -104,7 +105,8 @@ class InstructorProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = InstructorProfile
-        fields = ("id", "user", "bio", "expertise", "is_verified", "current_submission")
+        fields = ("id", "user", "bio", "expertise",
+                  "is_verified", "current_submission")
 
         read_only_fields = (
             "is_verified",
@@ -146,7 +148,8 @@ class StudentRegisterSerializer(serializers.ModelSerializer):
 
     def validate_email(self, value):
         if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError("A user with this email already exists.")
+            raise serializers.ValidationError(
+                "A user with this email already exists.")
         return value
 
 
@@ -199,13 +202,15 @@ class InstructorRegisterSerializer(serializers.ModelSerializer):
 
         profile.verification_requested_at = timezone.now()
         profile.is_verified = False
-        profile.save(update_fields=["verification_requested_at", "is_verified"])
+        profile.save(update_fields=[
+                     "verification_requested_at", "is_verified"])
 
         return user
 
     def validate_email(self, value):
         if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError("A user with this email already exists.")
+            raise serializers.ValidationError(
+                "A user with this email already exists.")
         return value
 
 
@@ -233,6 +238,26 @@ class InstructorVerificationSubmissionSerializer(serializers.ModelSerializer):
             "rejection_reason",
             "created_at",
         ]
+
+    def validate(self, data):
+        """
+        Ensure an instructor doesn't have multiple pending verification submissions.
+        """
+        # Get the profile from the context if this is a create operation
+        profile = self.context.get("profile")
+
+        if profile:
+            existing_pending = VerificationSubmission.objects.filter(
+                profile=profile,
+                status=VerificationSubmission.STATUS_PENDING
+            ).exists()
+
+            if existing_pending:
+                raise serializers.ValidationError(
+                    "Verification already under review. Please wait for the current submission to be reviewed."
+                )
+
+        return data
 
 
 class RejectReasonSerializer(serializers.Serializer):
