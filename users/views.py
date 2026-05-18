@@ -59,6 +59,10 @@ class ProfileDetail(generics.RetrieveUpdateDestroyAPIView):
     def get_serializer_class(self):
         user = self.request.user
 
+        # Handle AnonymousUser for drf_spectacular schema generation
+        if not user or user.is_anonymous:
+            return StudentProfileSerializer
+
         if user.role == User.ROLE_ADMIN:
             return AdminProfileSerializer
 
@@ -69,6 +73,10 @@ class ProfileDetail(generics.RetrieveUpdateDestroyAPIView):
 
     def get_object(self):
         user = self.request.user
+
+        # Handle AnonymousUser for drf_spectacular
+        if not user or user.is_anonymous:
+            return None
 
         # 🚨 CRITICAL: Admins do NOT get profiles
         if user.role == User.ROLE_ADMIN:
